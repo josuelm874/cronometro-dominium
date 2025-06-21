@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cronômetro Dominium</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .modes, .controls {
+      font-family: 'JetBrains Mono', monospace;
+      margin: 5px 0;
+      display: flex;
+      gap: 5px;
+    }
+
+    .timer {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 32px;
+      margin: 10px 0;
+    }
+
+    button {
+      background: none;
+      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid #ffffff00;
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: #ffffff00;
+      color: #ffffff;
+    }
+
+    img {
+      font-family: 'JetBrains Mono', monospace;
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Impede barra de rolagem */
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Método Pomodoro</h1>
+
+  <div class="modes">
+    <button onclick="setMode(25, 5)">Tático</button>
+    <button onclick="setMode(30, 10)">Estratégico</button>
+    <button onclick="setMode(45, 15)">Total</button>
+  </div>
+
+  <div class="timer" id="timer">25:00</div>
+
+  <div class="controls">
+    <button onclick="startTimer()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAACXBIWXMAAAsTAAALEwEAmpwYAAABIElEQVR4nN3VvytFYRzH8XNFN0okKQYx2W0Wg7JZjQab+ANIhstkk7+BSf4DpWwSYlFWGYSiWCS99OR76yTD5Z4zXJ/lPM95vt/Pu+fnN8v+pTCCfVyihu4yIOd4wrEv3WGiSEBvGNeiP42D+A5gsghIMkpa/WEsLV3SIcbLgnRiDS/4wA6GC4XkYvqxjXe8RbunUEhdGMNexD9iGdWsSEhdmMJZ5F1jFpWsSEgS2jCHm8g/wmhWJOTb4VjBa5pdVgakLmyGT7XsmZy21p4o+3RhK+LvsYSORpJ+C1nERmE3Hl3xdj2kJWrYtBFIbOo8bmMsvcKDzUD6wmg9+qmOXMS/K8z82TwHqYTpM05ylXEB7U0DcqAh7EYZLqfGZ62sT26jMvCt5S4dAAAAAElFTkSuQmCC" alt="play"></button>
+    <button onclick="pauseTimer()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAACXBIWXMAAAsTAAALEwEAmpwYAAABEUlEQVR4nN2VO4oCQRRFVYRWjJ1MBvyswMDAPdiCg7GRqL0AYZIJDd2FkeACTMx0QA0Np9fhJEcKntC21WU3dAn6oJJX975DfeBmMm9bQAMYAENZLuBEaAuyf9UqX+MRoAv8c197NTCkLQJHjVb5XRPkF/gD2kBT1lTMvZD2S/rTgLYt/q0J4gMrzfWp8kJ9T/o316P8ao4JsgHmtiFZTS91yDfQtw3xE7xJC1gDJWuQqEr7JJ/ADMjZhEykX7cJ8Z7x8N7LQeoybGwTkgd+gEpMiNIuk0Jy8pM+YkLKQDUppCrDRjEhC+BkguxSyBP/UZ64hmR0NNF70GjPQCcSEvhNwYzvGDLekf1gxteMgJeuCwZVPrGft30TAAAAAElFTkSuQmCC" alt="pause"></button>
+    <button onclick="resetTimer()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAAACXBIWXMAAAsTAAALEwEAmpwYAAABZElEQVR4nO2VvUoDQRSFB/zJom8gWNhZ2draiyEEYxA7UZ8lELC3i6u+gCiCpQZBRTF22kexU2Nj9ck1R1hWnZ1NtMsHy7LLuXPm5947zg34S4AxYBnYBc6Ae+AU2AbKQEG6SeAamM5rsAE80uVVJkfAFfCi/0/ACjCn71Lo4CPAnoJswCIwmtJEwCJwK91xXpMp4B2oA0Me3QQwm5hQmImWbU8UoG3xnfmQbbIz2M+cjfvUzwCVxFP0rfwryPbYqLr/gm6aPqcPOecYJWDBJ7A8P+nVwLB44ML9hgrtwPUBcAjc+QRWbOd9mlwCTZ8gVmUXejSIgA7Q8Imquao2hXqZUfGJxlUnN5n5nsL0ajFta6pZ4nXNpu4VpgA2FbfqQgB2FLAFDAesoCZ9HGSgwELCqKUCi3445HKiC8c9JQywBjxokI6lt+4Te7/pfzt4izJuxiXdhE0VrL0baor+Qx7gcvIBWKEgEB0dPkAAAAAASUVORK5CYII=" alt="recurring-appointment"></button>
+  </div>
+
+<script>
+  let studyMinutes = 25;
+  let breakMinutes = 5;
+  let secondsLeft = studyMinutes * 60;
+  let isRunning = false;
+  let isBreak = false;
+  let timerInterval;
+
+  const timerDisplay = document.getElementById('timer');
+
+  function setMode(study, rest) {
+    studyMinutes = study;
+    breakMinutes = rest;
+    isBreak = false;
+    resetTimer();
+  }
+
+  function updateDisplay() {
+    let minutes = Math.floor(secondsLeft / 60);
+    let seconds = secondsLeft % 60;
+    timerDisplay.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function startTimer() {
+    if (!isRunning) {
+      isRunning = true;
+      timerInterval = setInterval(() => {
+        if (secondsLeft > 0) {
+          secondsLeft--;
+          updateDisplay();
+        } else {
+          isBreak = !isBreak;
+          secondsLeft = (isBreak ? breakMinutes : studyMinutes) * 60;
+          updateDisplay();
+          alert(isBreak ? "Hora do descanso!" : "Hora de focar!");
+        }
+      }, 1000);
+    }
+  }
+
+  function pauseTimer() {
+    clearInterval(timerInterval);
+    isRunning = false;
+  }
+
+  function resetTimer() {
+    pauseTimer();
+    secondsLeft = (isBreak ? breakMinutes : studyMinutes) * 60;
+    updateDisplay();
+  }
+
+  updateDisplay();
+</script>
+
+</body>
+</html>
