@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Método Pomodoro</title>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+            background-color: #f4f1ec;
+            color: #000000;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        .timer {
+            font-size: 60px;
+            margin: 20px 0;
+        }
+        .controls, .modes {
+            margin: 10px 0;
+        }
+        button {
+            margin: 5px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color:rgba(255, 18, 18, 0);
+            color: rgb(0, 0, 0);
+        }
+        button:hover {
+            background-color: #00000000;
+        }
+        .label {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Método Pomodoro</h1>
+
+    <div class="modes">
+        <button onclick="setMode(25, 5)">Tático</button>
+        <button onclick="setMode(30, 10)">Estratégico</button>
+        <button onclick="setMode(45, 15)">Total</button>
+    </div>
+
+    <div class="timer" id="timer">25:00</div>
+
+    <div class="controls">
+        <button onclick="startTimer()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA5ElEQVR4nM3UIUuDURSH8d9QDIYZRCwzilktJk2WdWGfwSImP4CGBYtgV8T0JrtWv4BYFvYFRLCNIQpy4L4wBtvc+17BBy7c9Nx7zuH8+WNa2MVCDtkhhvjCK/brCu9wjzVc4xJNbFUVFkk0SgffuMVGDmGwh2cM0MWKmsKggSP08Y4zLJnBNGFJSE7wgV56pJawZBVX+MTjpDbMIyzZxAsucgvPc5fc/DdD6eINx1icVUYxQRg7fZruy+n8imJMGDv8kFYv+jU3N2PhEA1/wraKHKT4ih9FfLWrikZZx06ugM3CDxetNc/TihB1AAAAAElFTkSuQmCC" alt="play"></button>
+        <button onclick="pauseTimer()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAzUlEQVR4nNXUMWoCYRiE4QcsPIJg5wFSBETU3jbddmJlTOEZhO3iOWK6gJ2dYe9hmzRaeIIUIfAFFl3ZDVlCnHL+mbf4+BmuSU08Y48j3rEsyC3j7RjZVXTPdI8DxkjwgA8McplheLPIjKMzLQKmyE68QxS/lYSXVxbdM/UxqRPYxm2dwAW2JcAu1lWBaYUbFin7DbCHTZ3A5Cc3TK8SuMOoBPgaP6QSsINGCfAGrarAN9yVAF8w/5NxaMYU5efrsSD35eXn6+nSfP1PfQKvZVPsPzyOygAAAABJRU5ErkJggg==" alt="pause"></button>
+        <button onclick="resetTimer()"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAABHklEQVR4nNXUSy5EQRgF4G+gBwZeQYwNGdkBxkJ7xALsQCMWICbmWkisQIQ9GHp0PGPmsQMtIRggldTgarf7Xh0DTlLJTZ0/pyqnzrn8d3RhFguYxzQ6Evwc2vII9WILb3jAESrx+xmb6MQ7hrPE+nGHM4yhJcEVUMQ17vGBkSzBAayhtQ5fwnZCcLSR2DpWMg5cxQ52cYC+eoPB7CdM+iVM4LHGszxYwlAaEWJx2sRFDrGcRiziuAnBSnyob5iJOQvRyIsCqphKI0NQXzH+A8EiXmra8wWhAecNMphEmLlEOatyoSV7GaKB28cturNOHoyDFzFKhZTqXeEmtioXerARPQ2mn8RVjXvlPDeTgmB2+GWFWIQVXrO9GaG/g09a/Tejme61+gAAAABJRU5ErkJggg==" alt="recurring-appointment"></button>
+    </div>
+
+<script>
+    let studyMinutes = 25;
+    let breakMinutes = 5;
+    let secondsLeft = studyMinutes * 60;
+    let isRunning = false;
+    let isBreak = false;
+    let timerInterval;
+
+    const timerDisplay = document.getElementById('timer');
+    const currentMode = document.getElementById('currentMode');
+
+    function setMode(study, rest) {
+        studyMinutes = study;
+        breakMinutes = rest;
+        isBreak = false;
+        resetTimer();
+        currentMode.innerText = `Modo: ${study === 25 ? 'Foco Tático (25/5)' : study === 30 ? 'Foco Estratégico (30/10)' : 'Foco Total (45/15)'}`;
+    }
+
+    function updateDisplay() {
+        let minutes = Math.floor(secondsLeft / 60);
+        let seconds = secondsLeft % 60;
+        timerDisplay.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (!isRunning) {
+            isRunning = true;
+            timerInterval = setInterval(() => {
+                if (secondsLeft > 0) {
+                    secondsLeft--;
+                    updateDisplay();
+                } else {
+                    isBreak = !isBreak;
+                    secondsLeft = (isBreak ? breakMinutes : studyMinutes) * 60;
+                    updateDisplay();
+                    alert(isBreak ? "Hora do descanso!" : "Hora de focar!");
+                }
+            }, 1000);
+        }
+    }
+
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+    }
+
+    function resetTimer() {
+        pauseTimer();
+        secondsLeft = (isBreak ? breakMinutes : studyMinutes) * 60;
+        updateDisplay();
+    }
+
+    updateDisplay();
+</script>
+
+</body>
+</html>
